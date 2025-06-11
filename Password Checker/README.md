@@ -43,7 +43,8 @@ Link:- (https://shantanu7096.github.io/shantanu/)
 
 ## 📸 Screenshot
 
-![Password Strength Checker](./password_analyzer.png)
+![password_analyzer](https://github.com/user-attachments/assets/1b59b15e-5acb-4e1d-b691-77130c9bf3f9)
+
 
 
 ## Tech Stack
