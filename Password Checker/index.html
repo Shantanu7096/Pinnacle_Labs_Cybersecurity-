@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1976D2;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            padding-bottom: 70px; /* Increased to make room for suggestions */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        progress {
+            width: 100%;
+            height: 10px;
+        }
+        p {
+            margin: 8px 0;
+        }
+        .suggestions-container {
+            position: static;
+            text-align: left;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Password Strength Checker</h2>
+        <input type="password" id="passwordInput" placeholder="Enter your password">
+        <label style="display:block; margin:8px 0;">
+            <input type="checkbox" id="showPassword"> Show Password
+        </label>
+        <p id="strengthText">Strength: </p>
+        <progress id="progressBar" max="100" value="0"></progress>
+        <p id="crackTime">Estimated Crack Time:</p>
+        <p id="charCount">Characters used: 0</p>
+        <p id="containsInfo"></p>
+        <div class="suggestions-container">
+            <p id="suggestions">Loading suggestions...</p>
+        </div>
+    </div>
+    <script>
+        function updateSuggestions(password) {
+            let length = password.length;
+            let hasUpper = /[A-Z]/.test(password);
+            let hasLower = /[a-z]/.test(password);
+            let hasNumber = /\d/.test(password);
+            let hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+            let suggestions = [
+                "Use both uppercase and lowercase letters",
+                "Include at least one number",
+                "Use symbols (e.g., @, #, $, %)",
+                "Use at least 12 characters"
+            ];
+
+            let filteredSuggestions = suggestions.filter((s, i) => {
+                if (i === 0) return !hasUpper || !hasLower;
+                if (i === 1) return !hasNumber;
+                if (i === 2) return !hasSymbol;
+                if (i === 3) return length < 12;
+                return true;
+            });
+
+            let suggestionsElem = document.getElementById("suggestions");
+            suggestionsElem.innerHTML = "Suggestions:<ul style='margin-top:4px; padding-left: 12px;'>";
+            filteredSuggestions.forEach(s => {
+                suggestionsElem.innerHTML += `<li>${s}</li>`;
+            });
+            suggestionsElem.innerHTML += "</ul>";
+        }
+
+        function updateStrength(password) {
+            let strengthText = document.getElementById("strengthText");
+            let progressBar = document.getElementById("progressBar"); // Add this line
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            let strength = "Very Weak";
+            let value = 0; // Add this line
+
+            if (score >= 5 && password.length >= 12) {
+                strength = "Very Strong";
+                value = 100;
+            } else if (score >= 4) {
+                strength = "Strong";
+                value = 80;
+            } else if (score >= 3) {
+                strength = "Medium";
+                value = 60;
+            } else if (score >= 2) {
+                strength = "Weak";
+                value = 40;
+            } else if (score >= 1) {
+                value = 20;
+            }
+
+            strengthText.textContent = "Strength: " + strength;
+            progressBar.value = value; // Add this line
+        }
+
+        function updateCharCount(password) {
+            let charCountElem = document.getElementById("charCount");
+            charCountElem.textContent = "Characters used: " + password.length;
+        }
+
+        function updateCrackTime(password) {
+            let crackTimeElem = document.getElementById("crackTime");
+            // Simple estimation: 10000 guesses/sec, 4 types of chars
+            let charset = 0;
+            if (/[a-z]/.test(password)) charset += 26;
+            if (/[A-Z]/.test(password)) charset += 26;
+            if (/\d/.test(password)) charset += 10;
+            if (/[^A-Za-z0-9]/.test(password)) charset += 32;
+            let guesses = Math.pow(charset, password.length);
+            let guessesPerSecond = 10000;
+            let seconds = guesses / guessesPerSecond;
+
+            function formatTime(sec) {
+                if (sec < 60) return sec.toFixed(2) + " seconds";
+                let min = sec / 60;
+                if (min < 60) return min.toFixed(2) + " minutes";
+                let hr = min / 60;
+                if (hr < 24) return hr.toFixed(2) + " hours";
+                let days = hr / 24;
+                if (days < 365) return days.toFixed(2) + " days";
+                let years = days / 365;
+                return years.toFixed(2) + " years";
+            }
+
+            if (password.length === 0) {
+                crackTimeElem.textContent = "Estimated Crack Time:";
+            } else {
+                crackTimeElem.textContent = "Estimated Crack Time: " + formatTime(seconds);
+            }
+        }
+
+        // Show/hide password functionality
+        document.getElementById("showPassword").addEventListener("change", function() {
+            const pwdInput = document.getElementById("passwordInput");
+            pwdInput.type = this.checked ? "text" : "password";
+        });
+
+        // Live feedback for character types
+        function updateContainsInfo(password) {
+            let info = [];
+            if (/[A-Z]/.test(password)) info.push("Uppercase");
+            if (/[a-z]/.test(password)) info.push("Lowercase");
+            if (/\d/.test(password)) info.push("Number");
+            if (/[^A-Za-z0-9]/.test(password)) info.push("Symbol");
+            document.getElementById("containsInfo").textContent =
+                "Contains: " + (info.length ? info.join(", ") : "None");
+        }
+
+        // Update the event listener:
+        document.getElementById("passwordInput").addEventListener("input", function() {
+            let password = this.value;
+            updateSuggestions(password);
+            updateStrength(password);
+            updateCharCount(password);
+            updateCrackTime(password);
+            updateContainsInfo(password); // Add this line
+        });
+
+        // Also call on page load:
+        window.onload = () => {
+            updateSuggestions("");
+            updateStrength("");
+            updateCharCount("");
+            updateCrackTime("");
+            updateContainsInfo(""); // Add this line
+        };
+    </script>
+</body>
+</html>
