@@ -53,7 +53,8 @@ To run this project
 
 ## 📸 Screenshot
 
-![Text Encryption Screenshot](text%20encryption.png)
+![image](https://github.com/user-attachments/assets/b021ee17-dea3-4c58-a537-41debc9d823e)
+
 ## ⚡ Optimizations
 
 Here are some potential enhancements for future improvements:
